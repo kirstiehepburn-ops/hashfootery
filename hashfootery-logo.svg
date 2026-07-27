@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 130" width="480" height="130">
+  <defs>
+    <clipPath id="ball">
+      <circle cx="65" cy="65" r="58"/>
+    </clipPath>
+    <!-- Strong directional shading: bright top-left to dark grey bottom-right -->
+    <radialGradient id="bg" cx="32%" cy="28%" r="70%">
+      <stop offset="0%"   stop-color="#f2f4f6"/>
+      <stop offset="40%"  stop-color="#bcc3cc"/>
+      <stop offset="100%" stop-color="#7a8290"/>
+    </radialGradient>
+    <!-- Stripe gradient: lighter centre edge, darker outer edges -->
+    <linearGradient id="vg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#1255a8"/>
+      <stop offset="30%"  stop-color="#2278d8"/>
+      <stop offset="70%"  stop-color="#2278d8"/>
+      <stop offset="100%" stop-color="#1255a8"/>
+    </linearGradient>
+    <linearGradient id="hg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#1a6fcc"/>
+      <stop offset="50%"  stop-color="#2882e8"/>
+      <stop offset="100%" stop-color="#1255a8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Ball base -->
+  <circle cx="65" cy="65" r="59" fill="url(#bg)"/>
+
+  <!-- Vertical stripes — slightly bowed outward -->
+  <path d="M 32,7  Q 24,65 32,123  L 62,123 Q 54,65 62,7  Z" fill="url(#vg)" clip-path="url(#ball)"/>
+  <path d="M 68,7  Q 76,65 68,123  L 98,123 Q 106,65 98,7 Z" fill="url(#vg)" clip-path="url(#ball)"/>
+
+  <!-- Horizontal stripes on top — pronounced latitude curve -->
+  <path d="M 7,32  Q 65,16 123,32  L 123,62  Q 65,46 7,62  Z" fill="url(#hg)" clip-path="url(#ball)"/>
+  <path d="M 7,68  Q 65,84 123,68  L 123,98  Q 65,114 7,98  Z" fill="url(#hg)" clip-path="url(#ball)"/>
+
+  <!-- Specular highlight top-left -->
+  <ellipse cx="43" cy="35" rx="17" ry="12" fill="white" opacity="0.4" clip-path="url(#ball)"/>
+
+  <!-- Ball outline -->
+  <circle cx="65" cy="65" r="59" fill="none" stroke="#0f4a90" stroke-width="2.5"/>
+
+  <!-- hashfootery text -->
+  <text x="142" y="80"
+    font-family="'Segoe UI', system-ui, sans-serif"
+    font-weight="900"
+    font-size="56"
+    fill="#1e40af"
+    letter-spacing="-1">hashfootery</text>
+</svg>

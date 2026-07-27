@@ -35,20 +35,25 @@ header {
   box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
 .header-logo img {
-  height: 72px;
+  height: 70px;
   display: block;
 }
 
-.header-logo .logo-fallback {
-  font-size: 1.6rem;
+.logo-text {
+  font-size: 1.7rem;
   font-weight: 900;
-  color: var(--green);
-  letter-spacing: 1px;
+  color: var(--green-dark);
+  letter-spacing: -0.5px;
   font-style: italic;
 }
-
-.header-logo .logo-fallback span { color: var(--green-mid); }
 
 nav { display: flex; gap: 0.25rem; flex-wrap: wrap; }
 
