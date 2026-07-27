@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hashfootery.com</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <a class="header-logo" href="/">
+    <img src="hashfootery logo.jpg" alt="hashfootery" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+    <span class="logo-fallback" style="display:none">hash<span>footery</span></span>
+  </a>
+  <nav>
+    <a href="/" class="active">Home</a>
+    <a href="predict.html">Predict</a>
+    <a href="leaderboard.html">Standings</a>
+  </nav>
+</header>
+
+<main>
+  <div class="hero">
+    <h1>hashfootery is back</h1>
+    <p>The score prediction game for football fans. Predict the score of Premier League matches — tweet your pick with <strong>#hashfootery</strong> or enter it on the site. 3 points for the exact score, 1 point for the correct result.</p>
+    <a class="btn" href="predict.html">Make your predictions →</a>
+  </div>
+
+  <h2>How to play</h2>
+
+  <div class="rule-grid">
+    <div class="rule-box">
+      <div class="rule-pts">3</div>
+      <div class="rule-desc">points for predicting the exact score</div>
+    </div>
+    <div class="rule-box">
+      <div class="rule-pts">1</div>
+      <div class="rule-desc">point for the correct result (win/draw/loss)</div>
+    </div>
+    <div class="rule-box">
+      <div class="rule-pts">0</div>
+      <div class="rule-desc">points if you get the outcome wrong</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Submitting via the site</h3>
+    <p style="color:var(--muted);font-size:0.93rem;line-height:1.6">
+      Head to the <a href="predict.html" style="color:var(--green);font-weight:600">Predict</a> page, enter your name, and fill in your score predictions before each match kicks off. Predictions lock 1 hour before kickoff.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Submitting via Bluesky</h3>
+    <p style="color:var(--muted);font-size:0.93rem;line-height:1.6">
+      Register your Bluesky handle on the Predict page, then post a prediction in this format:<br><br>
+      <code style="background:var(--green-pale);padding:0.3rem 0.6rem;border-radius:4px;font-size:0.9rem">#hashfootery Arsenal 2-1 Chelsea</code><br><br>
+      The <strong>@hashfooterybot</strong> will reply to confirm your prediction has been logged. Bluesky posts also lock 1 hour before kickoff.
+    </p>
+  </div>
+
+  <div class="card" id="current-gw" style="display:none">
+    <h3>Current gameweek</h3>
+    <div id="gw-preview"></div>
+    <p style="margin-top:0.75rem"><a href="predict.html" class="btn">Predict this gameweek →</a></p>
+  </div>
+</main>
+
+<script>
+// Show a quick preview of upcoming fixtures on the home page
+(async () => {
+  try {
+    const r = await fetch('/api/fixtures?current=true');
+    const { gameweek, fixtures } = await r.json();
+    if (!fixtures?.length) return;
+    const upcoming = fixtures.filter(f => f.status === 'scheduled');
+    if (!upcoming.length) return;
+    document.getElementById('current-gw').style.display = '';
+    const bst = d => {
+      const t = new Date(new Date(d).getTime() + 3600000);
+      return t.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' })
+        + ' · ' + t.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) + ' BST';
+    };
+    document.getElementById('gw-preview').innerHTML =
+      `<p style="color:var(--muted);font-size:0.85rem;margin-bottom:0.6rem">Gameweek ${gameweek}</p>` +
+      upcoming.map(f => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-top:1px solid var(--border);font-size:0.9rem">
+          <span style="font-weight:700">${f.home_team} v ${f.away_team}</span>
+          <span style="color:var(--muted);font-size:0.8rem">${bst(f.kickoff_utc)}</span>
+        </div>`).join('');
+  } catch(e) {}
+})();
+</script>
+
+</body>
+</html>

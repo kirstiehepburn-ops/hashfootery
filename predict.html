@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Predict — hashfootery</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <a class="header-logo" href="/">
+    <img src="hashfootery logo.jpg" alt="hashfootery" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+    <span class="logo-fallback" style="display:none">hash<span>footery</span></span>
+  </a>
+  <nav>
+    <a href="/">Home</a>
+    <a href="predict.html" class="active">Predict</a>
+    <a href="leaderboard.html">Standings</a>
+  </nav>
+</header>
+
+<main>
+  <h2>Predictions</h2>
+
+  <!-- Player registration bar -->
+  <div class="player-bar">
+    <div style="flex:1;min-width:180px">
+      <label style="font-size:0.78rem;font-weight:600;color:var(--muted);display:block;margin-bottom:0.25rem">Your name</label>
+      <input id="player-name" type="text" placeholder="Enter your name" autocomplete="off">
+    </div>
+    <div style="flex:1;min-width:180px">
+      <label style="font-size:0.78rem;font-weight:600;color:var(--muted);display:block;margin-bottom:0.25rem">Bluesky handle <span style="font-weight:400">(optional)</span></label>
+      <input id="bsky-handle" type="text" placeholder="@you.bsky.social" autocomplete="off">
+    </div>
+    <button class="btn" onclick="savePlayer()">Save</button>
+    <div id="player-status"></div>
+  </div>
+
+  <!-- Gameweek selector -->
+  <div class="gw-bar">
+    <label style="font-size:0.88rem;font-weight:600;color:var(--muted)">Gameweek</label>
+    <select id="gw-select" onchange="loadFixtures(this.value)">
+      <option value="">Loading...</option>
+    </select>
+  </div>
+
+  <!-- Fixtures -->
+  <div id="fixtures-container">
+    <p style="color:var(--muted)">Loading fixtures…</p>
+  </div>
+</main>
+
+<script>
+const API = '';
+let playerId = null;
+let fixtures = [];
+
+// ── Player ──────────────────────────────────────────────────────────────────
+function loadPlayer() {
+  const name   = localStorage.getItem('hf_name') || '';
+  const handle = localStorage.getItem('hf_handle') || '';
+  document.getElementById('player-name').value  = name;
+  document.getElementById('bsky-handle').value  = handle;
+  if (name) lookupPlayer(name);
+}
+
+async function lookupPlayer(name) {
+  try {
+    const r = await fetch(`${API}/api/players?name=${encodeURIComponent(name)}`);
+    const p = await r.json();
+    if (p?.id) { playerId = p.id; loadMyPredictions(); }
+  } catch(e) {}
+}
+
+async function savePlayer() {
+  const name   = document.getElementById('player-name').value.trim();
+  const handle = document.getElementById('bsky-handle').value.trim();
+  const st = document.getElementById('player-status');
+  if (!name) { showStatus(st, 'Please enter your name', 'err'); return; }
+  try {
+    const r = await fetch(`${API}/api/players`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, bluesky_handle: handle || null })
+    });
+    const p = await r.json();
+    if (p.id) {
+      playerId = p.id;
+      localStorage.setItem('hf_name', name);
+      localStorage.setItem('hf_handle', handle);
+      showStatus(st, '✓ Saved', 'ok');
+      loadMyPredictions();
+    } else {
+      showStatus(st, p.error || 'Error', 'err');
+    }
+  } catch(e) { showStatus(st, 'Error saving', 'err'); }
+}
+
+// ── Fixtures ─────────────────────────────────────────────────────────────────
+async function populateGWSelect() {
+  // Build gameweek options 1-38
+  const sel = document.getElementById('gw-select');
+  sel.innerHTML = Array.from({length:38}, (_,i) =>
+    `<option value="${i+1}">Gameweek ${i+1}</option>`).join('');
+  // Fetch current GW
+  try {
+    const r = await fetch(`${API}/api/fixtures?current=true`);
+    const { gameweek } = await r.json();
+    if (gameweek) { sel.value = gameweek; loadFixtures(gameweek); }
+    else loadFixtures(1);
+  } catch(e) { loadFixtures(1); }
+}
+
+async function loadFixtures(gw) {
+  const container = document.getElementById('fixtures-container');
+  container.innerHTML = '<p style="color:var(--muted)">Loading…</p>';
+  try {
+    const r = await fetch(`${API}/api/fixtures?gameweek=${gw}`);
+    const { fixtures: fx } = await r.json();
+    fixtures = fx || [];
+    if (!fixtures.length) {
+      container.innerHTML = '<p style="color:var(--muted)">No fixtures for this gameweek yet.</p>';
+      return;
+    }
+    renderFixtures();
+    if (playerId) loadMyPredictions();
+  } catch(e) {
+    container.innerHTML = '<p style="color:var(--muted)">Could not load fixtures.</p>';
+  }
+}
+
+function renderFixtures() {
+  const container = document.getElementById('fixtures-container');
+  container.innerHTML = fixtures.map(f => {
+    const lockAt = new Date(new Date(f.kickoff_utc).getTime() - 3600000);
+    const locked = new Date() >= lockAt || f.status === 'finished';
+    const bst = new Date(new Date(f.kickoff_utc).getTime() + 3600000);
+    const dateStr = bst.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' })
+      + ' · ' + bst.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) + ' BST';
+
+    let resultBadge = '';
+    if (f.status === 'finished' && f.home_score != null) {
+      resultBadge = `<span style="font-size:0.75rem;background:var(--green-pale);color:var(--green);padding:0.15rem 0.5rem;border-radius:20px;font-weight:700">Result: ${f.home_score}-${f.away_score}</span>`;
+    }
+
+    return `
+      <div class="fixture-card" id="card-${f.id}">
+        <div class="fixture-meta">
+          <span>${locked ? '🔒 ' : ''}${dateStr}</span>
+          <span>
+            ${resultBadge}
+            ${locked && f.status !== 'finished' ? '<span class="locked-badge">Locked</span>' : ''}
+          </span>
+        </div>
+        <div class="fixture-body">
+          <div class="team">${f.home_team}</div>
+          <div class="score-inputs">
+            <input type="number" min="0" max="20" id="h-${f.id}" placeholder="-" ${locked?'disabled':''} onchange="autosave('${f.id}')">
+            <span class="dash">-</span>
+            <input type="number" min="0" max="20" id="a-${f.id}" placeholder="-" ${locked?'disabled':''} onchange="autosave('${f.id}')">
+          </div>
+          <div class="team away">${f.away_team}</div>
+        </div>
+        <div id="status-${f.id}" style="padding:0 1rem 0.5rem;min-height:1.4rem"></div>
+      </div>`;
+  }).join('');
+}
+
+async function loadMyPredictions() {
+  if (!playerId || !fixtures.length) return;
+  // Load predictions for all fixtures in this gameweek
+  const ids = fixtures.map(f => f.id);
+  try {
+    const r = await fetch(`${API}/api/mypredictions?player_id=${playerId}&fixture_ids=${ids.join(',')}`);
+    const preds = await r.json();
+    for (const p of preds || []) {
+      const hEl = document.getElementById(`h-${p.fixture_id}`);
+      const aEl = document.getElementById(`a-${p.fixture_id}`);
+      if (hEl) hEl.value = p.home_score;
+      if (aEl) aEl.value = p.away_score;
+      showSaved(p.fixture_id, p.points);
+    }
+  } catch(e) {}
+}
+
+function showSaved(fixtureId, points) {
+  const el = document.getElementById(`status-${fixtureId}`);
+  if (!el) return;
+  if (points != null) {
+    const label = points === 3 ? '🎯 Exact! +3pts' : points === 1 ? '✓ Correct result +1pt' : '✗ No points';
+    el.innerHTML = `<span class="saved-badge">${label}</span>`;
+  } else {
+    el.innerHTML = `<span class="saved-badge">✓ Saved</span>`;
+  }
+}
+
+async function autosave(fixtureId) {
+  if (!playerId) {
+    const name = document.getElementById('player-name').value.trim();
+    if (!name) return;
+    await savePlayer();
+    if (!playerId) return;
+  }
+  const h = document.getElementById(`h-${fixtureId}`).value;
+  const a = document.getElementById(`a-${fixtureId}`).value;
+  if (h === '' || a === '') return;
+  const st = document.getElementById(`status-${fixtureId}`);
+  st.innerHTML = '<span style="color:var(--muted);font-size:0.75rem">Saving…</span>';
+  try {
+    const r = await fetch(`${API}/api/submit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ player_id: playerId, fixture_id: fixtureId, home_score: h, away_score: a })
+    });
+    const j = await r.json();
+    if (j.ok) showSaved(fixtureId, null);
+    else st.innerHTML = `<span style="color:var(--red);font-size:0.75rem">${j.error || 'Error'}</span>`;
+  } catch(e) {
+    st.innerHTML = `<span style="color:var(--red);font-size:0.75rem">Error saving</span>`;
+  }
+}
+
+function showStatus(el, msg, type) {
+  el.innerHTML = `<span class="status ${type}" style="padding:0.3rem 0.6rem;display:inline-block;margin:0">${msg}</span>`;
+  setTimeout(() => { if (el) el.innerHTML = ''; }, 3000);
+}
+
+loadPlayer();
+populateGWSelect();
+</script>
+
+</body>
+</html>

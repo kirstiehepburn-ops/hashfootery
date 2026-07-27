@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — hashfootery</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <a class="header-logo" href="/">
+    <img src="hashfootery logo.jpg" alt="hashfootery" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+    <span class="logo-fallback" style="display:none">hash<span>footery</span></span>
+  </a>
+  <nav>
+    <a href="/">Home</a>
+    <a href="predict.html">Predict</a>
+    <a href="leaderboard.html">Standings</a>
+    <a href="admin.html" class="active">Admin</a>
+  </nav>
+</header>
+
+<main>
+  <h2>Admin</h2>
+
+  <!-- Auth -->
+  <div class="card" id="auth-section">
+    <h3>Admin key</h3>
+    <div class="form-row">
+      <label>Key</label>
+      <input type="password" id="admin-key" placeholder="Enter admin key">
+    </div>
+    <button class="btn" onclick="unlock()">Unlock</button>
+    <div id="auth-status"></div>
+  </div>
+
+  <div id="admin-content" style="display:none">
+
+    <!-- Add fixture -->
+    <div class="card">
+      <h3>Add fixture</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+        <div class="form-row">
+          <label>Gameweek</label>
+          <input type="number" id="fx-gw" min="1" max="38" placeholder="1">
+        </div>
+        <div class="form-row">
+          <label>Kickoff (BST)</label>
+          <input type="datetime-local" id="fx-kickoff">
+        </div>
+        <div class="form-row">
+          <label>Home team</label>
+          <input type="text" id="fx-home" list="team-list" placeholder="Arsenal">
+        </div>
+        <div class="form-row">
+          <label>Away team</label>
+          <input type="text" id="fx-away" list="team-list" placeholder="Chelsea">
+        </div>
+      </div>
+      <datalist id="team-list">
+        <option>Arsenal</option><option>Aston Villa</option><option>Bournemouth</option>
+        <option>Brentford</option><option>Brighton</option><option>Chelsea</option>
+        <option>Crystal Palace</option><option>Everton</option><option>Fulham</option>
+        <option>Ipswich Town</option><option>Leicester City</option><option>Liverpool</option>
+        <option>Manchester City</option><option>Manchester United</option><option>Newcastle United</option>
+        <option>Nottingham Forest</option><option>Southampton</option><option>Tottenham</option>
+        <option>West Ham</option><option>Wolverhampton</option>
+      </datalist>
+      <button class="btn" onclick="addFixture()">Add fixture</button>
+      <div id="fx-status"></div>
+    </div>
+
+    <!-- Enter results -->
+    <div class="card">
+      <h3>Enter results</h3>
+      <div class="form-row">
+        <label>Gameweek</label>
+        <select id="res-gw" onchange="loadResultFixtures(this.value)">
+          ${Array.from({length:38},(_,i)=>`<option value="${i+1}">Gameweek ${i+1}</option>`).join('')}
+        </select>
+      </div>
+      <div id="result-fixtures"><p style="color:var(--muted);font-size:0.88rem">Select a gameweek above</p></div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+let adminKey = '';
+
+function unlock() {
+  adminKey = document.getElementById('admin-key').value.trim();
+  if (!adminKey) return;
+  document.getElementById('admin-content').style.display = '';
+  document.getElementById('auth-section').style.display = 'none';
+  loadResultFixtures(1);
+}
+
+// ── Add fixture ──────────────────────────────────────────────────────────────
+async function addFixture() {
+  const gw     = document.getElementById('fx-gw').value;
+  const home   = document.getElementById('fx-home').value.trim();
+  const away   = document.getElementById('fx-away').value.trim();
+  const bstVal = document.getElementById('fx-kickoff').value; // "YYYY-MM-DDTHH:MM"
+  const st     = document.getElementById('fx-status');
+
+  if (!gw || !home || !away || !bstVal) {
+    showStatus(st, 'All fields required', 'err'); return;
+  }
+  // Convert BST (UTC+1) to UTC
+  const utc = new Date(new Date(bstVal).getTime() - 3600000).toISOString();
+
+  const r = await fetch('/api/add-fixture', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ admin_key: adminKey, gameweek: parseInt(gw), home_team: home, away_team: away, kickoff_utc: utc })
+  });
+  const j = await r.json(); // eslint-disable-line
+  if (j.ok) showStatus(st, '✓ Fixture added', 'ok');
+  else showStatus(st, j.error || 'Error', 'err');
+}
+
+// ── Results ──────────────────────────────────────────────────────────────────
+async function loadResultFixtures(gw) {
+  const container = document.getElementById('result-fixtures');
+  container.innerHTML = '<p style="color:var(--muted);font-size:0.88rem">Loading…</p>';
+  try {
+    const r = await fetch(`/api/fixtures?gameweek=${gw}`);
+    const { fixtures } = await r.json();
+    if (!fixtures?.length) {
+      container.innerHTML = '<p style="color:var(--muted);font-size:0.88rem">No fixtures for this gameweek.</p>';
+      return;
+    }
+    container.innerHTML = fixtures.map(f => {
+      const bst = new Date(new Date(f.kickoff_utc).getTime() + 3600000);
+      const dateStr = bst.toLocaleDateString('en-GB', {day:'numeric',month:'short'}) + ' · '
+        + bst.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'}) + ' BST';
+      const finished = f.status === 'finished';
+      return `
+        <div style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0;border-top:1px solid var(--border);flex-wrap:wrap">
+          <span style="flex:1;font-weight:${finished?700:400};font-size:0.9rem">${f.home_team} v ${f.away_team}</span>
+          <span style="font-size:0.78rem;color:var(--muted)">${dateStr}</span>
+          <input type="number" min="0" max="20" id="rh-${f.id}" placeholder="H" style="width:46px;padding:0.3rem;text-align:center;border:1.5px solid var(--border);border-radius:4px" value="${f.home_score??''}">
+          <span style="font-weight:700">-</span>
+          <input type="number" min="0" max="20" id="ra-${f.id}" placeholder="A" style="width:46px;padding:0.3rem;text-align:center;border:1.5px solid var(--border);border-radius:4px" value="${f.away_score??''}">
+          <button class="btn" style="padding:0.35rem 0.75rem;font-size:0.82rem" onclick="saveResult('${f.id}','res-st-${f.id}')">
+            ${finished ? 'Update' : 'Save'}
+          </button>
+          <span id="res-st-${f.id}" style="font-size:0.8rem"></span>
+        </div>`;
+    }).join('');
+  } catch(e) {
+    container.innerHTML = '<p style="color:var(--muted);font-size:0.88rem">Error loading fixtures.</p>';
+  }
+}
+
+async function saveResult(fixtureId, statusId) {
+  const h  = document.getElementById(`rh-${fixtureId}`).value;
+  const a  = document.getElementById(`ra-${fixtureId}`).value;
+  const st = document.getElementById(statusId);
+  if (h === '' || a === '') { st.textContent = 'Enter both scores'; return; }
+  const r = await fetch('/api/results', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ admin_key: adminKey, fixture_id: fixtureId, home_score: h, away_score: a })
+  });
+  const j = await r.json();
+  st.style.color = j.ok ? 'var(--green-mid)' : 'var(--red)';
+  st.textContent = j.ok ? `✓ Scored ${j.predictions_scored} predictions` : (j.error || 'Error');
+}
+
+function showStatus(el, msg, type) {
+  el.innerHTML = `<div class="status ${type}" style="margin-top:0.5rem">${msg}</div>`;
+  setTimeout(() => el.innerHTML = '', 4000);
+}
+</script>
+
+</body>
+</html>
