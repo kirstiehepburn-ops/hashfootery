@@ -134,7 +134,7 @@ async function loadFixtures(gw) {
 function renderFixtures() {
   const container = document.getElementById('fixtures-container');
   container.innerHTML = fixtures.map(f => {
-    const lockAt = new Date(new Date(f.kickoff_utc).getTime() - 3600000);
+    const lockAt = new Date(new Date(f.kickoff_utc).getTime() - 1800000);
     const locked = new Date() >= lockAt || f.status === 'finished';
     const bst = new Date(new Date(f.kickoff_utc).getTime() + 3600000);
     const dateStr = bst.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' })

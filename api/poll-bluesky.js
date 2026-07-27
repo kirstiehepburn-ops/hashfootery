@@ -22,7 +22,7 @@ function parsePrediction(text, fixtures) {
 
   for (const f of fixtures) {
     // Only match if neither team is TBD and fixture isn't locked
-    const lockAt = new Date(new Date(f.kickoff_utc).getTime() - 60 * 60 * 1000);
+    const lockAt = new Date(new Date(f.kickoff_utc).getTime() - 30 * 60 * 1000);
     if (new Date() >= lockAt) continue;
     if (matchTeam(homePart, f.home_team) && matchTeam(awayPart, f.away_team)) {
       return { fixture_id: f.id, home_score: homeGoals, away_score: awayGoals };
