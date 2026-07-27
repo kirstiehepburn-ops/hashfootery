@@ -175,12 +175,27 @@ async function loadResultFixtures(gw) {
           <button class="btn" style="padding:0.35rem 0.75rem;font-size:0.82rem" onclick="saveResult('${f.id}','res-st-${f.id}')">
             ${finished ? 'Update' : 'Save'}
           </button>
+          <button class="btn secondary" style="padding:0.35rem 0.75rem;font-size:0.82rem;background:var(--red)" onclick="deleteFixture('${f.id}','${f.home_team} v ${f.away_team}')">
+            Delete
+          </button>
           <span id="res-st-${f.id}" style="font-size:0.8rem"></span>
         </div>`;
     }).join('');
   } catch(e) {
     container.innerHTML = '<p style="color:var(--muted);font-size:0.88rem">Error loading fixtures.</p>';
   }
+}
+
+async function deleteFixture(fixtureId, label) {
+  if (!confirm(`Delete "${label}"? This cannot be undone.`)) return;
+  const r = await fetch('/api/delete-fixture', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ admin_key: adminKey, fixture_id: fixtureId })
+  });
+  const j = await r.json();
+  if (j.ok) loadResultFixtures(document.getElementById('res-gw').value);
+  else alert(j.error || 'Error deleting fixture');
 }
 
 async function saveResult(fixtureId, statusId) {
