@@ -117,10 +117,6 @@ module.exports = async (req, res) => {
     const { data: existingPreds } = await sb.from('hf_predictions').select('bluesky_post_uri').not('bluesky_post_uri', 'is', null);
     const processedUris = new Set((existingPreds || []).map(p => p.bluesky_post_uri));
 
-    // Get bot credentials (only if needed)
-    let botToken = null, botDid = null;
-    const needBot = process.env.BSKY_BOT_HANDLE && process.env.BSKY_BOT_PASSWORD;
-
     let processed = 0;
     for (const post of newPosts) {
       if (processedUris.has(post.uri)) continue;
