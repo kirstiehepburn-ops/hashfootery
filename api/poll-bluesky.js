@@ -76,9 +76,19 @@ module.exports = async (req, res) => {
     const { data: state } = await sb.from('hf_poll_state').select('*').eq('id', 1).single();
     const sinceDate = state?.last_cursor || new Date(Date.now() - 10 * 60 * 1000).toISOString();
 
-    // Fetch recent #hashfootery posts
-    const url = `${BSKY_PUBLIC}/app.bsky.feed.searchPosts?q=${encodeURIComponent(HASHTAG)}&limit=50&sort=latest`;
-    const searchRes = await fetch(url);
+    // Authenticate bot (needed for search on bsky.social)
+    let botToken = null, botDid = null;
+    const needBot = process.env.BSKY_BOT_HANDLE && process.env.BSKY_BOT_PASSWORD;
+    if (needBot) {
+      ({ accessJwt: botToken, did: botDid } = await getBotToken());
+    }
+
+    // Fetch recent #hashfootery posts (authenticated to avoid 403 on public API)
+    const url = `${BSKY_API}/app.bsky.feed.searchPosts?q=${encodeURIComponent(HASHTAG)}&limit=50&sort=latest`;
+    const searchHeaders = botToken
+      ? { 'Authorization': `Bearer ${botToken}` }
+      : {};
+    const searchRes = await fetch(url, { headers: searchHeaders });
     if (!searchRes.ok) {
       const text = await searchRes.text();
       console.error('Bluesky API error:', searchRes.status, text.slice(0, 300));
@@ -138,7 +148,7 @@ module.exports = async (req, res) => {
 
       // Reply to confirm
       if (needBot) {
-        if (!botToken) ({ accessJwt: botToken, did: botDid } = await getBotToken());
+        if (!botToken) ({ accessJwt: botToken, did: botDid } = await getBotToken()); // fallback if auth skipped above
         const fx = fixtures.find(f => f.id === pred.fixture_id);
         const msg = `✅ Got it, @${post.author.handle}! ${fx.home_team} ${pred.home_score}-${pred.away_score} ${fx.away_team} logged. Good luck! 🍀`;
         await replyToPost(botToken, botDid, post, msg);
