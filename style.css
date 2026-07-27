@@ -1,13 +1,13 @@
 :root {
-  --green:      #1e88e5;
-  --green-dark: #0d47a1;
-  --green-mid:  #2196f3;
-  --green-pale: #e3f2fd;
+  --green:      #2563eb;
+  --green-dark: #1e40af;
+  --green-mid:  #3b82f6;
+  --green-pale: #eff6ff;
   --gold:       #f5c842;
   --white:      #ffffff;
-  --light:      #f0f5fb;
-  --border:     #c5d5e8;
-  --text:       #0d1b2a;
+  --light:      #f4f7fb;
+  --border:     #dde5f0;
+  --text:       #0f172a;
   --muted:      #4a6580;
   --red:        #c0392b;
   --radius:     6px;
@@ -24,35 +24,36 @@ body {
 
 /* ── Header ── */
 header {
-  background: var(--green-dark);
-  border-bottom: 3px solid var(--gold);
-  padding: 1rem 1.5rem;
+  background: var(--white);
+  border-bottom: 3px solid var(--green);
+  padding: 0.85rem 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 0.75rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 
 .header-logo img {
-  height: 48px;
+  height: 52px;
   display: block;
 }
 
 .header-logo .logo-fallback {
   font-size: 1.6rem;
   font-weight: 900;
-  color: var(--white);
+  color: var(--green);
   letter-spacing: 1px;
   font-style: italic;
 }
 
-.header-logo .logo-fallback span { color: var(--gold); }
+.header-logo .logo-fallback span { color: var(--green-mid); }
 
 nav { display: flex; gap: 0.25rem; flex-wrap: wrap; }
 
 nav a {
-  color: #bbdefb;
+  color: var(--muted);
   text-decoration: none;
   padding: 0.4rem 0.85rem;
   border-radius: var(--radius);
@@ -62,8 +63,8 @@ nav a {
 }
 
 nav a:hover, nav a.active {
-  background: var(--green-mid);
-  color: var(--white);
+  background: var(--green-pale);
+  color: var(--green);
 }
 
 /* ── Main ── */
@@ -296,7 +297,7 @@ h3 { font-size: 1.1rem; color: var(--green-dark); margin-bottom: 0.75rem; }
 }
 
 .hero h1 { font-size: 1.6rem; margin-bottom: 0.5rem; color: var(--gold); }
-.hero p  { color: #bbdefb; line-height: 1.6; max-width: 540px; margin: 0 auto 1.25rem; }
+.hero p  { color: #bfdbfe; line-height: 1.6; max-width: 540px; margin: 0 auto 1.25rem; }
 
 .rule-grid {
   display: grid;
