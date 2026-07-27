@@ -31,15 +31,36 @@
 <script>
 const medals = ['🥇','🥈','🥉'];
 
+// Fetch Bluesky avatar URL for a handle (returns null on any failure)
+async function getBskyAvatar(handle) {
+  try {
+    const clean = handle.replace(/^@/, '');
+    const r = await fetch(`https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(clean)}`);
+    if (!r.ok) return null;
+    const j = await r.json();
+    return j.avatar || null;
+  } catch(e) { return null; }
+}
+
+function initials(name) {
+  return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+}
+
 async function load() {
   const container = document.getElementById('lb-container');
   try {
     const r = await fetch('/api/leaderboard');
     const standings = await r.json();
     if (!standings.length) {
-      container.innerHTML = '<p style="color:var(--muted)">No scored predictions yet — check back after the first results are in!</p>';
+      container.innerHTML = '<p style="color:var(--muted)">No players yet — be the first to sign up!</p>';
       return;
     }
+
+    // Fetch avatars in parallel for players with Bluesky handles
+    const avatars = await Promise.all(
+      standings.map(p => p.bluesky_handle ? getBskyAvatar(p.bluesky_handle) : Promise.resolve(null))
+    );
+
     container.innerHTML = `
       <table class="lb-table">
         <thead>
@@ -54,16 +75,22 @@ async function load() {
           </tr>
         </thead>
         <tbody>
-          ${standings.map((p, i) => `
+          ${standings.map((p, i) => {
+            const avatar = avatars[i];
+            const pic = avatar
+              ? `<img src="${avatar}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:0.5rem">`
+              : `<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--green-pale);color:var(--green);font-size:0.65rem;font-weight:700;vertical-align:middle;margin-right:0.5rem">${initials(p.name)}</span>`;
+            return `
             <tr>
               <td class="pos num">${medals[i] || i+1}</td>
-              <td><strong>${p.name}</strong></td>
+              <td>${pic}<strong>${p.name}</strong></td>
               <td class="num pts">${p.total}</td>
               <td class="num" style="color:var(--muted)">${p.match_pts}</td>
               <td class="num" style="color:var(--green-mid)">${p.season_pts || 0}</td>
               <td class="num" style="color:var(--muted)">${p.exact}</td>
               <td class="num" style="color:var(--muted)">${p.played}</td>
-            </tr>`).join('')}
+            </tr>`;
+          }).join('')}
         </tbody>
       </table>
       <p style="margin-top:0.75rem;font-size:0.8rem;color:var(--muted)">Total = all points · Matches = score prediction points · Season = bonus prediction points · Exact = correct scores (3pts each)</p>
