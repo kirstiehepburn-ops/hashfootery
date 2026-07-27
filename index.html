@@ -26,7 +26,7 @@
 <main>
   <div class="hero">
     <h1>hashfootery is back</h1>
-    <p>The score prediction game for football fans. Predict the score of Premier League matches - tweet your pick with <strong>#hashfootery</strong> or enter it on the site. 3 points for the exact score, 1 point for the correct result.</p>
+    <p>A score prediction game for Premier League football. Predict the score of each match to earn points - 3 for an exact score, 1 for the correct result. At the start of the season you also make a set of bonus predictions that score points as the season unfolds.</p>
     <a class="btn" href="predict.html">Make your predictions →</a>
   </div>
 
@@ -43,23 +43,56 @@
     </div>
     <div class="rule-box">
       <div class="rule-pts">0</div>
-      <div class="rule-desc">points if you get the outcome wrong</div>
+      <div class="rule-desc">points if you get the result wrong</div>
     </div>
   </div>
 
   <div class="card">
     <h3>Submitting via the site</h3>
     <p style="color:var(--muted);font-size:0.93rem;line-height:1.6">
-      Head to the <a href="predict.html" style="color:var(--green);font-weight:600">Predict</a> page, enter your name, and fill in your score predictions before each match kicks off. Predictions lock 30 minutes before kickoff.
+      Head to the <a href="predict.html" style="color:var(--green);font-weight:600">Predict</a> page, enter your name, and fill in your score predictions before each match kicks off. Predictions lock 30 minutes before kick-off.
     </p>
   </div>
 
   <div class="card">
     <h3>Submitting via Bluesky</h3>
     <p style="color:var(--muted);font-size:0.93rem;line-height:1.6">
-      Register your Bluesky handle on the Predict page, then post a prediction in this format:<br><br>
+      Register your Bluesky handle on the Predict page, then post your prediction in this format:<br><br>
       <code style="background:var(--green-pale);padding:0.3rem 0.6rem;border-radius:4px;font-size:0.9rem">#hashfootery Arsenal 2-1 Chelsea</code><br><br>
-      The <strong>@hashfooterybot</strong> will reply to confirm your prediction has been logged. Bluesky posts also lock 30 minutes before kickoff.
+      The <strong>@hashfooterybot</strong> will reply to confirm your prediction has been logged. Bluesky predictions also lock 30 minutes before kick-off. You can use common abbreviations - Spurs, Man City, Brighton, Forest etc.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Season predictions</h3>
+    <p style="color:var(--muted);font-size:0.93rem;line-height:1.6;margin-bottom:1rem">Before the first match of the season kicks off, you can make a set of bonus predictions. These lock at GW1 kick-off and score points as results are confirmed throughout the season.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.75rem">
+      <div>
+        <p style="font-size:0.78rem;font-weight:700;color:var(--green-dark);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.5rem">League positions</p>
+        <p style="font-size:0.88rem;color:var(--muted);line-height:1.7">Premier League champions — <strong>10pts</strong><br>Top 4 in order — <strong>4pts</strong> exact, <strong>2pts</strong> right team wrong spot<br>Two relegated teams — <strong>5pts</strong> each</p>
+      </div>
+      <div>
+        <p style="font-size:0.78rem;font-weight:700;color:var(--green-dark);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.5rem">Individual awards</p>
+        <p style="font-size:0.88rem;color:var(--muted);line-height:1.7">Golden Boot — <strong>8pts</strong><br>Most assists — <strong>6pts</strong><br>First hat-trick scorer — <strong>6pts</strong></p>
+      </div>
+      <div>
+        <p style="font-size:0.78rem;font-weight:700;color:var(--green-dark);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.5rem">Chaos predictions</p>
+        <p style="font-size:0.88rem;color:var(--muted);line-height:1.7">First manager sacked — <strong>6pts</strong><br>First red card — <strong>5pts</strong> <span style="font-size:0.8em">(3pts if not first)</span><br>Spurs final position — <strong>5pts</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Deadlines &amp; updates</h3>
+    <p style="color:var(--muted);font-size:0.93rem;line-height:1.6">
+      Each match prediction locks 30 minutes before kick-off. Season predictions lock when the first match of the season kicks off. You can update any prediction before its deadline by submitting again on the site or posting a new prediction on Bluesky - it will override your previous entry.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Standings</h3>
+    <p style="color:var(--muted);font-size:0.93rem;line-height:1.6">
+      The <a href="leaderboard.html" style="color:var(--green);font-weight:600">standings table</a> shows total points across all match and season predictions combined, with a breakdown of each. Players are ranked by total points - exact scores are the tiebreaker.
     </p>
   </div>
 
