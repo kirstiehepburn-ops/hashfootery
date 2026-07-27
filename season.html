@@ -147,39 +147,32 @@
 </main>
 
 <script>
-const TEAMS = [
-  'Arsenal','Aston Villa','Bournemouth','Brentford','Brighton',
-  'Chelsea','Crystal Palace','Everton','Fulham','Ipswich Town',
-  'Leicester City','Liverpool','Manchester City','Manchester United',
-  'Newcastle United','Nottingham Forest','Southampton','Tottenham',
-  'West Ham','Wolverhampton'
-];
-
-const MANAGERS = [
-  'Mikel Arteta','Unai Emery','Andoni Iraola','Thomas Frank',
-  'Fabian Hürzeler','Enzo Maresca','Oliver Glasner','Sean Dyche',
-  'Marco Silva','Kieran McKenna','Steve Cooper','Arne Slot',
-  'Pep Guardiola','Erik ten Hag','Eddie Howe','Nuno Espírito Santo',
-  'Russell Martin','Ange Postecoglou','Julen Lopetegui','Gary O\'Neil'
-];
-
-const teamSelects  = ['champion','top4_1','top4_2','top4_3','top4_4','relegated_1','relegated_2'];
+const teamSelects    = ['champion','top4_1','top4_2','top4_3','top4_4','relegated_1','relegated_2'];
 const managerSelects = ['manager_sacked'];
 
 let playerId = null;
-let locked = false;
 
-// Populate dropdowns
-teamSelects.forEach(id => {
-  const el = document.getElementById(id);
-  if (!el) return;
-  TEAMS.forEach(t => { const o = document.createElement('option'); o.value=t; o.textContent=t; el.appendChild(o); });
-});
-managerSelects.forEach(id => {
-  const el = document.getElementById(id);
-  if (!el) return;
-  MANAGERS.forEach(m => { const o = document.createElement('option'); o.value=m; o.textContent=m; el.appendChild(o); });
-});
+async function loadTeams() {
+  try {
+    const r = await fetch('/api/teams');
+    const teams = await r.json();
+    const names    = teams.map(t => t.name);
+    const managers = teams.map(t => t.manager).filter(Boolean);
+
+    teamSelects.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      names.forEach(t => { const o = document.createElement('option'); o.value=t; o.textContent=t; el.appendChild(o); });
+    });
+    managerSelects.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      managers.forEach(m => { const o = document.createElement('option'); o.value=m; o.textContent=m; el.appendChild(o); });
+    });
+  } catch(e) { console.error('Could not load teams', e); }
+}
+
+loadTeams();
 
 // Check lock
 async function checkLock() {

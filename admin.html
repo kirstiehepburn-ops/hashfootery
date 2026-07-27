@@ -236,16 +236,28 @@ function showStatus(el, msg, type) {
   setTimeout(() => el.innerHTML = '', 4000);
 }
 
-// Populate season result dropdowns
-const TEAMS = ['Arsenal','Aston Villa','Bournemouth','Brentford','Brighton','Chelsea','Crystal Palace','Everton','Fulham','Ipswich Town','Leicester City','Liverpool','Manchester City','Manchester United','Newcastle United','Nottingham Forest','Southampton','Tottenham','West Ham','Wolverhampton'];
-const MANAGERS = ['Mikel Arteta','Unai Emery','Andoni Iraola','Thomas Frank','Fabian Hürzeler','Enzo Maresca','Oliver Glasner','Sean Dyche','Marco Silva','Kieran McKenna','Steve Cooper','Arne Slot','Pep Guardiola','Erik ten Hag','Eddie Howe','Nuno Espírito Santo','Russell Martin','Ange Postecoglou','Julen Lopetegui',"Gary O'Neil"];
-['sr-champion','sr-top4_1','sr-top4_2','sr-top4_3','sr-top4_4','sr-relegated_1','sr-relegated_2'].forEach(id=>{
-  const el=document.getElementById(id);
-  if(el) TEAMS.forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=t;el.appendChild(o);});
-});
-document.querySelectorAll('#sr-manager_sacked').forEach(el=>{
-  MANAGERS.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;el.appendChild(o);});
-});
+// Populate season result dropdowns from API
+async function loadTeams() {
+  try {
+    const r = await fetch('/api/teams');
+    const teams = await r.json();
+    const names    = teams.map(t => t.name);
+    const managers = teams.map(t => t.manager).filter(Boolean);
+
+    ['sr-champion','sr-top4_1','sr-top4_2','sr-top4_3','sr-top4_4','sr-relegated_1','sr-relegated_2'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      names.forEach(t => { const o = document.createElement('option'); o.value=t; o.textContent=t; el.appendChild(o); });
+    });
+    const mEl = document.getElementById('sr-manager_sacked');
+    if (mEl) managers.forEach(m => { const o = document.createElement('option'); o.value=m; o.textContent=m; mEl.appendChild(o); });
+
+    // Also update the fixture datalist
+    const dl = document.getElementById('team-list');
+    if (dl) { dl.innerHTML = ''; names.forEach(t => { const o = document.createElement('option'); o.value=t; dl.appendChild(o); }); }
+  } catch(e) { console.error('Could not load teams', e); }
+}
+loadTeams();
 </script>
 
 </body>

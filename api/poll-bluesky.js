@@ -1,17 +1,10 @@
 const sb   = require('./_db');
 const cors = require('./_cors');
+const { matchTeam } = require('./_teams');
 
 const BSKY_PUBLIC = 'https://public.api.bsky.app/xrpc';
 const BSKY_API    = 'https://bsky.social/xrpc';
 const HASHTAG     = '#hashfootery';
-
-// Normalise team name for fuzzy matching
-function norm(s) { return s.toLowerCase().replace(/[^a-z0-9]/g, ''); }
-
-function matchTeam(input, teamName) {
-  const i = norm(input), t = norm(teamName);
-  return i === t || t.startsWith(i) || i.startsWith(t);
-}
 
 // Parse "Arsenal 2-1 Chelsea" from post text
 function parsePrediction(text, fixtures) {
