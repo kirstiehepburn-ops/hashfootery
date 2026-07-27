@@ -50,7 +50,7 @@ header {
 .logo-text {
   font-size: 1.7rem;
   font-weight: 900;
-  color: var(--green-mid);
+  color: #088ee5;
   letter-spacing: -0.5px;
   font-style: italic;
 }
