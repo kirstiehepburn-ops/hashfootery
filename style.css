@@ -288,7 +288,7 @@ h3 { font-size: 1.1rem; color: var(--green-dark); margin-bottom: 0.75rem; }
 
 /* ── Hero (home page) ── */
 .hero {
-  background: var(--green-dark);
+  background: var(--green-mid);
   color: var(--white);
   border-radius: var(--radius);
   padding: 2rem 1.5rem;
