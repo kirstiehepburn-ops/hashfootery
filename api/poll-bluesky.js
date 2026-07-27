@@ -79,8 +79,14 @@ module.exports = async (req, res) => {
     // Fetch recent #hashfootery posts
     const url = `${BSKY_PUBLIC}/app.bsky.feed.searchPosts?q=${encodeURIComponent(HASHTAG)}&limit=50&sort=latest`;
     const searchRes = await fetch(url);
-    const { posts } = await searchRes.json();
-    if (!posts?.length) return res.json({ ok: true, processed: 0 });
+    if (!searchRes.ok) {
+      const text = await searchRes.text();
+      console.error('Bluesky API error:', searchRes.status, text.slice(0, 300));
+      return res.json({ ok: true, processed: 0, skipped: `bluesky_${searchRes.status}` });
+    }
+    const body = await searchRes.json();
+    const posts = body.posts || body.feed || [];
+    if (!posts.length) return res.json({ ok: true, processed: 0 });
 
     // Only posts newer than last poll
     const newPosts = posts.filter(p => p.record?.createdAt > sinceDate);
