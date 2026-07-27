@@ -16,6 +16,7 @@
   <nav>
     <a href="/">Home</a>
     <a href="predict.html">Predict</a>
+    <a href="season.html">Season</a>
     <a href="leaderboard.html">Standings</a>
     <a href="admin.html" class="active">Admin</a>
   </nav>
@@ -73,7 +74,7 @@
 
     <!-- Enter results -->
     <div class="card">
-      <h3>Enter results</h3>
+      <h3>Enter match results</h3>
       <div class="form-row">
         <label>Gameweek</label>
         <select id="res-gw" onchange="loadResultFixtures(this.value)">
@@ -81,6 +82,31 @@
         </select>
       </div>
       <div id="result-fixtures"><p style="color:var(--muted);font-size:0.88rem">Select a gameweek above</p></div>
+    </div>
+
+    <!-- Season results -->
+    <div class="card">
+      <h3>Season results <span style="font-size:0.8rem;font-weight:400;color:var(--muted)">— update as they happen</span></h3>
+      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem">Saving any field rescores all players immediately.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+        <div class="form-row"><label>Champions</label><select id="sr-champion"><option value="">-</option></select></div>
+        <div class="form-row"><label>1st place</label><select id="sr-top4_1"><option value="">-</option></select></div>
+        <div class="form-row"><label>2nd place</label><select id="sr-top4_2"><option value="">-</option></select></div>
+        <div class="form-row"><label>3rd place</label><select id="sr-top4_3"><option value="">-</option></select></div>
+        <div class="form-row"><label>4th place</label><select id="sr-top4_4"><option value="">-</option></select></div>
+        <div class="form-row"><label>Relegated 1</label><select id="sr-relegated_1"><option value="">-</option></select></div>
+        <div class="form-row"><label>Relegated 2</label><select id="sr-relegated_2"><option value="">-</option></select></div>
+        <div class="form-row"><label>Golden Boot</label><input type="text" id="sr-golden_boot" placeholder="Player name"></div>
+        <div class="form-row"><label>Most Assists</label><input type="text" id="sr-most_assists" placeholder="Player name"></div>
+        <div class="form-row"><label>First manager sacked</label><select id="sr-manager_sacked"><option value="">-</option></select></div>
+        <div class="form-row"><label>First red card</label><input type="text" id="sr-first_red_card" placeholder="Player name"></div>
+        <div class="form-row"><label>Other red cards (comma-separated)</label><input type="text" id="sr-other_red_cards" placeholder="Player A, Player B"></div>
+        <div class="form-row"><label>First hat-trick</label><input type="text" id="sr-first_hat_trick" placeholder="Player name"></div>
+        <div class="form-row"><label>Spurs final position</label><select id="sr-spurs_position"><option value="">-</option>${Array.from({length:20},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div>
+        <div class="form-row"><label>Lock date (BST)</label><input type="datetime-local" id="sr-lock_at"></div>
+      </div>
+      <button class="btn" onclick="saveSeasonResults()">Save &amp; rescore</button>
+      <div id="sr-status"></div>
     </div>
 
   </div>
@@ -170,10 +196,56 @@ async function saveResult(fixtureId, statusId) {
   st.textContent = j.ok ? `✓ Scored ${j.predictions_scored} predictions` : (j.error || 'Error');
 }
 
+async function saveSeasonResults() {
+  const st = document.getElementById('sr-status');
+  const otherRaw = document.getElementById('sr-other_red_cards').value;
+  const other_red_cards = otherRaw ? otherRaw.split(',').map(s=>s.trim()).filter(Boolean) : [];
+  const lockBst = document.getElementById('sr-lock_at').value;
+  const lock_at = lockBst ? new Date(new Date(lockBst).getTime()-3600000).toISOString() : null;
+
+  const payload = {
+    admin_key: adminKey,
+    champion:       document.getElementById('sr-champion').value || null,
+    top4_1:         document.getElementById('sr-top4_1').value || null,
+    top4_2:         document.getElementById('sr-top4_2').value || null,
+    top4_3:         document.getElementById('sr-top4_3').value || null,
+    top4_4:         document.getElementById('sr-top4_4').value || null,
+    relegated_1:    document.getElementById('sr-relegated_1').value || null,
+    relegated_2:    document.getElementById('sr-relegated_2').value || null,
+    golden_boot:    document.getElementById('sr-golden_boot').value.trim() || null,
+    most_assists:   document.getElementById('sr-most_assists').value.trim() || null,
+    manager_sacked: document.getElementById('sr-manager_sacked').value || null,
+    first_red_card: document.getElementById('sr-first_red_card').value.trim() || null,
+    other_red_cards,
+    first_hat_trick:document.getElementById('sr-first_hat_trick').value.trim() || null,
+    spurs_position: parseInt(document.getElementById('sr-spurs_position').value) || null,
+    lock_at,
+  };
+
+  const r = await fetch('/api/season-results', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const j = await r.json();
+  showStatus(document.getElementById('sr-status'), j.ok ? `✓ Saved and rescored ${j.players_scored} players` : (j.error||'Error'), j.ok?'ok':'err');
+}
+
 function showStatus(el, msg, type) {
   el.innerHTML = `<div class="status ${type}" style="margin-top:0.5rem">${msg}</div>`;
   setTimeout(() => el.innerHTML = '', 4000);
 }
+
+// Populate season result dropdowns
+const TEAMS = ['Arsenal','Aston Villa','Bournemouth','Brentford','Brighton','Chelsea','Crystal Palace','Everton','Fulham','Ipswich Town','Leicester City','Liverpool','Manchester City','Manchester United','Newcastle United','Nottingham Forest','Southampton','Tottenham','West Ham','Wolverhampton'];
+const MANAGERS = ['Mikel Arteta','Unai Emery','Andoni Iraola','Thomas Frank','Fabian Hürzeler','Enzo Maresca','Oliver Glasner','Sean Dyche','Marco Silva','Kieran McKenna','Steve Cooper','Arne Slot','Pep Guardiola','Erik ten Hag','Eddie Howe','Nuno Espírito Santo','Russell Martin','Ange Postecoglou','Julen Lopetegui',"Gary O'Neil"];
+['sr-champion','sr-top4_1','sr-top4_2','sr-top4_3','sr-top4_4','sr-relegated_1','sr-relegated_2'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el) TEAMS.forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=t;el.appendChild(o);});
+});
+document.querySelectorAll('#sr-manager_sacked').forEach(el=>{
+  MANAGERS.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;el.appendChild(o);});
+});
 </script>
 
 </body>

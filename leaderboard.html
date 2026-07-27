@@ -16,6 +16,7 @@
   <nav>
     <a href="/">Home</a>
     <a href="predict.html">Predict</a>
+    <a href="season.html">Season</a>
     <a href="leaderboard.html" class="active">Standings</a>
   </nav>
 </header>
@@ -43,9 +44,10 @@ async function load() {
           <tr>
             <th class="num">#</th>
             <th>Player</th>
-            <th class="num">Pts</th>
+            <th class="num">Total</th>
+            <th class="num">Matches</th>
+            <th class="num">Season</th>
             <th class="num">Exact</th>
-            <th class="num">Result</th>
             <th class="num">Played</th>
           </tr>
         </thead>
@@ -55,13 +57,14 @@ async function load() {
               <td class="pos num">${medals[i] || i+1}</td>
               <td><strong>${p.name}</strong></td>
               <td class="num pts">${p.total}</td>
-              <td class="num" style="color:var(--green-mid)">${p.exact}</td>
-              <td class="num" style="color:var(--muted)">${p.outcome}</td>
+              <td class="num" style="color:var(--muted)">${p.match_pts}</td>
+              <td class="num" style="color:var(--green-mid)">${p.season_pts || 0}</td>
+              <td class="num" style="color:var(--muted)">${p.exact}</td>
               <td class="num" style="color:var(--muted)">${p.played}</td>
             </tr>`).join('')}
         </tbody>
       </table>
-      <p style="margin-top:0.75rem;font-size:0.8rem;color:var(--muted)">Pts = total points · Exact = correct scores (3pts each) · Result = correct outcome (1pt each)</p>
+      <p style="margin-top:0.75rem;font-size:0.8rem;color:var(--muted)">Total = all points · Matches = score prediction points · Season = bonus prediction points · Exact = correct scores (3pts each)</p>
     `;
   } catch(e) {
     container.innerHTML = '<p style="color:var(--muted)">Could not load standings.</p>';
